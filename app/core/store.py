@@ -10,11 +10,13 @@ class Store:
 
         from app.core.db import DatabaseAccessor
         from app.core.email import EmailManager
+        from app.core.ff import FFAccessor
         from app.core.jwt import JWTManager
         from app.core.s3 import S3Accessor
 
         self.db = DatabaseAccessor(self)
         self.email = EmailManager(self)
+        self.ff = FFAccessor(self)
         self.jwt = JWTManager(self)
         self.s3 = S3Accessor(self)
 
