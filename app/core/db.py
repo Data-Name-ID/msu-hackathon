@@ -61,6 +61,7 @@ class DatabaseAccessor(BaseAccessor):
             autoflush=False,
             autocommit=False,
             expire_on_commit=False,
+
         )
 
     async def disconnect(self) -> None:

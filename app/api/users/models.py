@@ -1,32 +1,40 @@
-from passlib.context import CryptContext
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+import typing
 
-from app.core.config import StaticConfig
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.api.users.enums import UserType
 from app.core.db import BaseModel
-from app.core.models.mixins import CreatedAtMixin, IDMixin, UpdatedAtMixin
+from app.core.models.mixins import IDMixin
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+if typing.TYPE_CHECKING:
+    from app.api.notes.models import EventNoteModel
 
 
-class UserModel(IDMixin, CreatedAtMixin, UpdatedAtMixin, BaseModel):
+class GroupModel(IDMixin, BaseModel):
+    __tablename__ = "groups"
+
+    users: Mapped[list["UserModel"]] = relationship(
+        back_populates="group",
+        cascade="all, delete",
+        lazy="noload",
+    )
+
+
+class UserModel(IDMixin, BaseModel):
     __tablename__ = "users"
 
-    username: Mapped[str] = mapped_column(
-        String(StaticConfig.NAME_STR_LENGTH),
-        unique=True,
+    type: Mapped[UserType]
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))
+    email: Mapped[str] = mapped_column(String(255))
+    confirmed: Mapped[bool]
+
+    group: Mapped["GroupModel"] = relationship(
+        back_populates="users",
+        lazy="noload",
     )
-    email: Mapped[str] = mapped_column(
-        String(StaticConfig.CREDENTIALS_STR_LENGTH),
-        unique=True,
+    event_notes: Mapped[list["EventNoteModel"]] = relationship(
+        back_populates="user",
+        cascade="all, delete",
+        lazy="noload",
     )
-    password: Mapped[str] = mapped_column(String(StaticConfig.CREDENTIALS_STR_LENGTH))
-
-    activated: Mapped[bool] = mapped_column(default=False)
-
-    def validate_password(self, password: str) -> bool:
-        return pwd_context.verify(password, self.password)
-
-    @staticmethod
-    def hash_password(password: str) -> str:
-        return pwd_context.hash(password)
