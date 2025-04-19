@@ -14,4 +14,4 @@ class FFAccessor(BaseAccessor):
                 headers=headers,
             )
             response.raise_for_status()
-            return UserData.model_validate_json(response.json())
+            return UserData.model_validate(response.json())

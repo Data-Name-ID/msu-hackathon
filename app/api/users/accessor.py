@@ -1,6 +1,5 @@
 from sqlalchemy import exists, select, update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import load_only
 
 from app.api.users.models import UserModel
 from app.api.users.schemas import UserData
@@ -17,18 +16,9 @@ class UserAccessor(BaseAccessor):
         return await self.store.db.scalar(stmt)
 
     async def fetch_by_id(self, user_id: int) -> UserModel | None:
-        stmt = (
-            select(UserModel)
-            .where(UserModel.id == user_id)
-            .options(
-                load_only(
-                    UserModel.activated,
-                    UserModel.username,
-                ),
-            )
-        )
+        stmt = select(UserModel).where(UserModel.id == user_id)
         return await self.store.db.scalar(stmt)
 
-    async def activate(self, user_id: int) -> None:
-        stmt = update(UserModel).where(UserModel.id == user_id).values(activated=True)
+    async def confirm(self, user_id: int) -> None:
+        stmt = update(UserModel).where(UserModel.id == user_id).values(confirmed=True)
         await self.store.db.execute(stmt)

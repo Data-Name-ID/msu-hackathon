@@ -1,63 +1,16 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Cookie, Request, Response
+from fastapi import APIRouter, Cookie, Request, Response
 from httpx import HTTPStatusError
 
 from app.api.users import errors
 from app.api.users.models import UserModel
-from app.api.users.schemas import FFToken, UserCreate, UserLogin, UserPublic
+from app.api.users.schemas import FFToken, UserPublic
 from app.core.depends import StoreDep, UserDep
 from app.core.jwt.schemas import AccessToken, RefreshToken, TokenCollection
 from app.core.utils import build_responses
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
-
-
-@router.post(
-    "/signup",
-    summary="Регистрация",
-    response_description="Коллекция токенов доступа",
-    description="""
-    Устанавливает куку с refresh токеном,
-    отправляет письмо с подтверждением на указанный email.
-    """,
-    responses=build_responses(
-        errors.USER_CREATION_ERROR,
-        errors.USER_ALREADY_EXISTS_ERROR,
-    ),
-)
-async def sign_up(
-    user_in: UserCreate,
-    request: Request,
-    response: Response,
-    background_tasks: BackgroundTasks,
-    store: StoreDep,
-) -> TokenCollection:
-    is_email_exists = await store.user_accessor.exists_by_email(user_in.email)
-    is_username_exists = await store.user_accessor.exists_by_username(user_in.username)
-
-    if is_email_exists or is_username_exists:
-        raise errors.USER_ALREADY_EXISTS_ERROR
-
-    user_id = await store.user_accessor.create(user_in)
-
-    if user_id is None:
-        raise errors.USER_CREATION_ERROR
-
-    background_tasks.add_task(
-        store.user_manager.send_confirm_email,
-        user_id=user_id,
-        email=user_in.email,
-        base_url=request.base_url,
-    )
-
-    token_collection = store.jwt.create_token_collection(user_id)
-    store.user_manager.set_refresh_token_cookie(
-        request=request,
-        response=response,
-        token=token_collection.refresh_token,
-    )
-    return token_collection
 
 
 @router.post(
@@ -77,21 +30,17 @@ async def sign_in(
         user_data = await store.ff.get_user_data(data.token)
     except HTTPStatusError as e:
         raise errors.INVALID_TOKEN_ERROR from e
-    
-    user = await store.user_accessor.get_by_id(user_data.username)
 
+    if not await store.user_accessor.exists_by_id(user_data.id):
+        await store.user_accessor.create(user_data)
 
-
-    await store.user_accessor.create(user_data)
-    token_collection = store.jwt.create_token_collection(user.id)
+    token_collection = store.jwt.create_token_collection(user_data.id)
     store.user_manager.set_refresh_token_cookie(
         request=request,
         response=response,
         token=token_collection.refresh_token,
     )
     return token_collection
-
-    raise errors.WRONG_EMAIL_OR_PASSWORD_ERROR
 
 
 @router.get(
