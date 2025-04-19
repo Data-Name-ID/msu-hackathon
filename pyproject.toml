@@ -1,0 +1,46 @@
+[project]
+name = "msu-hackathon"
+version = "0.1.0"
+description = "description"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiobotocore>=2.21.1",
+    "aiosmtplib>=4.0.0",
+    "alembic>=1.15.1",
+    "asyncpg>=0.30.0",
+    "fastapi[all]>=0.115.11",
+    "passlib[bcrypt]>=1.7.4",
+    "pyjwt[crypto]>=2.10.1",
+    "python-slugify>=8.0.4",
+    "sentry-sdk[fastapi]>=2.22.0",
+    "sqlalchemy>=2.0.39",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.1.0",
+    "mypy>=1.15.0",
+    "ruff>=0.9.10",
+    "types-passlib>=1.7.7.20241221",
+    "types-aiobotocore>=2.21.1",
+    "types-aiofiles>=24.1.0.20250326",
+    "aiofiles>=24.1.0",
+]
+
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+preview = true
+
+select = ["ALL"]
+ignore = ["D", "DOC", "CPY", "RUF001", "RUF002", "RUF003", "PLC0415", "ANN401", "SLF001", "B903"]
+
+[tool.ruff.lint.pylint]
+max-args = 10
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ['pydantic.mypy']
