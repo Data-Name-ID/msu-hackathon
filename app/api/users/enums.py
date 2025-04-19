@@ -1,7 +1,7 @@
-from enum import StrEnum, auto
+from enum import StrEnum
 
 
 class UserType(StrEnum):
-    STUDENT = auto()
-    ELDER = auto()
-    TEACHER = auto()
+    STUDENT = "student"
+    ELDER = "elder"
+    TEACHER = "teacher"
