@@ -7,11 +7,11 @@ from app.core.accessors import BaseAccessor
 
 
 class TaskAccessor(BaseAccessor):
-    async def get_by_time(
-            self,
-            start: str | None = None,
-            end: str | None = None,
-            event_id: int | None = None,
+    async def list_with_filters(
+        self,
+        start: str | None = None,
+        end: str | None = None,
+        event_id: int | None = None,
     ) -> list[TaskModel]:
         stmt = select(TaskModel)
 
@@ -22,7 +22,9 @@ class TaskAccessor(BaseAccessor):
             end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(UTC)
             stmt = stmt.where(TaskModel.end_ts <= end_date)
 
-        if event_id is not None:
+        if event_id is None:
+            stmt = stmt.where(TaskModel.event_id is None)
+        else:
             stmt = stmt.where(TaskModel.event_id == event_id)
 
         return self.store.db.scalars(stmt)

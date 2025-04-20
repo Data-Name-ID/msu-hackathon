@@ -1,68 +1,75 @@
-from datetime import datetime
+import datetime
 
 from pydantic import BaseModel, model_validator
 
 from app.api.tasks.enums import TaskPriority, TaskType
 
 
-class TaskCreate(BaseModel):
+class CommentBase(BaseModel):
+    text: str
+
+
+class CommentCreate(CommentBase):
+    task_id: int
+
+
+class CommentPublic(CommentBase):
+    id: int
+
+
+class TaskBase(BaseModel):
     title: str
-    description: str | None = None
     priority: TaskPriority = TaskPriority.NORMAL
     type: TaskType = TaskType.GENERAL
-    event_id: int | None = None
-    date: datetime | None = None
-    start_ts: datetime | None = None
-    end_ts: datetime | None = None
+    date: datetime.date | None = None
+    start_ts: datetime.datetime | None = None
+    end_ts: datetime.datetime | None = None
+    completed: bool
     for_group: bool
-    note: str
+
+
+class TaskCreate(TaskBase):
+    description: str | None = None
+    event_id: int | None = None
 
     @model_validator(mode="before")
-    @classmethod
-    def adjust_dates(cls, data: dict):
-        start = data.get("start_ts")
-        end = data.get("end_ts")
-        date_val = data.get("date")
+    def adjust_dates(self) -> "TaskCreate":
+        if self.date:
+            self.start_ts = datetime.datetime.combine(self.date, datetime.time.min)
+            self.end_ts = datetime.datetime.combine(self.date, datetime.time.max)
 
-        if start and end and start == end:
-            data["date"] = start.date()
-            data["start_ts"] = None
-            data["end_ts"] = None
-
-        elif date_val and not start and not end:
-            dt = datetime.combine(date_val, datetime.min.time())
-            data["start_ts"] = dt
-            data["end_ts"] = dt
-
-        return data
+        return self
 
 
-class TaskResponse(BaseModel):
+class Task(TaskBase):
+    @model_validator(mode="before")
+    def adjust_dates(self) -> "Task":
+        if (
+            self.start_ts.time() == datetime.time.min
+            and self.end_ts.time() == datetime.time.max
+        ):
+            self.date = self.start_ts.date()
+            self.start_ts = None
+            self.end_ts = None
+
+
+class TaskPublic(TaskBase):
     id: int
-    title: str
-    priority: TaskPriority
-    type: TaskType
-    date: datetime | None
-    start_ts: datetime | None
-    end_ts: datetime | None
+    event_id: int | None = None
+    description: str | None = None
+    note: str | None = None
+    comments: list[CommentPublic] | None = None
+
+
+class TaskUpdate(TaskBase):
+    id: int
+    description: str | None = None
+    event_id: int | None = None
 
     @model_validator(mode="before")
-    @classmethod
-    def adjust_dates(cls, values: dict) -> dict:
-        start = values.get("start_ts")
-        end = values.get("end_ts")
-        date = values.get("date")
+    def adjust_dates(self) -> "TaskUpdate":
+        if self.date:
+            self.start_ts = datetime.datetime.combine(self.date, datetime.time.min)
+            self.end_ts = datetime.datetime.combine(self.date, datetime.time.max)
 
-        if start and end and start == end:
-            values["date"] = start
-            values["start_ts"] = None
-            values["end_ts"] = None
-
-        elif date and not start and not end:
-            values["start_ts"] = date
-            values["end_ts"] = date
-
-        return values
-
-    class Config:
-        from_attributes = True
+        return self

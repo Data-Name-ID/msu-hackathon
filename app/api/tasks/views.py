@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.tasks.schemas import TaskResponse
+from app.api.tasks.models import TaskModel
+from app.api.tasks.schemas import Task
 from app.api.users import errors as user_errors
 from app.core.depends import StoreDep
 from app.core.utils import build_responses
@@ -10,28 +11,19 @@ router = APIRouter(prefix="/tasks", tags=["Задачки"])
 
 @router.get(
     "",
-    summary="Получить задачки по времени",
-    response_description="Получить задачки в заданном диапазоне времени",
+    summary="Получить задачи по времени",
+    response_description="Получить задачи в заданном диапазоне времени",
     responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
+    response_model=list[Task],
 )
 async def get_tasks(
     store: StoreDep,
     start: str | None = None,
     end: str | None = None,
     event_id: int | None = None,
-) -> list[TaskResponse]:
-    res = await store.tasks_accessor.get_by_time(
+) -> list[TaskModel]:
+    return await store.tasks_accessor.list_with_filters(
         start=start,
         end=end,
         event_id=event_id,
     )
-    return [TaskResponse.model_validate(elem) for elem in res]
-
-
-@router.post(
-
-)
-async def create_task(
-
-) -> int:
-    return 201
