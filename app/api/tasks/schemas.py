@@ -24,7 +24,6 @@ class TaskBase(BaseModel):
     date: datetime.date | None = None
     start_ts: datetime.datetime | None = None
     end_ts: datetime.datetime | None = None
-    completed: bool
     for_group: bool
 
 
@@ -42,6 +41,8 @@ class TaskCreate(TaskBase):
 
 
 class Task(TaskBase):
+    completed: bool
+
     @model_validator(mode="before")
     def adjust_dates(self) -> "Task":
         if (
@@ -59,12 +60,14 @@ class TaskPublic(TaskBase):
     description: str | None = None
     note: str | None = None
     comments: list[CommentPublic] | None = None
+    completed: bool
 
 
 class TaskUpdate(TaskBase):
     id: int
     description: str | None = None
     event_id: int | None = None
+    completed: bool
 
     @model_validator(mode="before")
     def adjust_dates(self) -> "TaskUpdate":

@@ -17,7 +17,7 @@ class TaskAccessor(BaseAccessor):
 
         if start is not None:
             start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.start_ts <= start_date)
+            stmt = stmt.where(TaskModel.start_ts >= start_date)
         if end is not None:
             end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(UTC)
             stmt = stmt.where(TaskModel.end_ts <= end_date)
