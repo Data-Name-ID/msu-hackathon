@@ -1,7 +1,9 @@
+from http import HTTPStatus
+
 from fastapi import APIRouter
 
-from app.api.tasks.models import TaskModel, TaskNotesModel
-from app.api.tasks.schemas import Task, TaskNote
+from app.api.tasks.models import TaskModel
+from app.api.tasks.schemas import Task, TaskComplete, TaskCompleteResponse, TaskNote
 from app.api.users import errors as user_errors
 from app.core.depends import StoreDep, UserDep
 from app.core.utils import build_responses
@@ -49,3 +51,23 @@ async def change_note(
     )
 
     return TaskNote(priority=res.priority, note=res.description)
+
+
+@router.post(
+    "/{task_id}/status",
+    summary="Изменить статус задачи",
+    response_description="Изменить статус выполнения статуса задачи",
+    responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
+)
+async def set_task_status(
+    store: StoreDep,
+    user: UserDep,
+    task_id: int,
+    task_complete: TaskComplete,
+) -> TaskCompleteResponse | int:
+    if task_complete.complete:
+        return TaskCompleteResponse.model_validate(
+            await store.tasks_accessor.create_task_complete(task_id, user.id),
+        )
+    await store.tasks_accessor.delete_task_complete(task_id, user.id)
+    return HTTPStatus.NO_CONTENT
