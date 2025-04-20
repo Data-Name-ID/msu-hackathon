@@ -110,3 +110,15 @@ class TaskUpdate(TaskBase):
 class TaskNote(BaseModel):
     priority: TaskPriority = TaskPriority.NORMAL
     note: str | None = None
+
+
+class TaskComplete(BaseModel):
+    complete: bool
+
+
+class TaskCompleteResponse(BaseModel):
+    task_id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True

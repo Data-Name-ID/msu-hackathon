@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import ColumnElement, Select, exists, insert, select, update
+from sqlalchemy import ColumnElement, Select, delete, exists, insert, select, update
 from sqlalchemy.orm import joinedload, with_loader_criteria
 
 from app.api.tasks.enums import TaskPriority
@@ -80,8 +80,7 @@ class TaskAccessor(BaseAccessor):
         priority: TaskPriority,
     ) -> TaskNotesModel:
         stmt = select(
-            exists(TaskNotesModel)
-            .where(
+            exists(TaskNotesModel).where(
                 TaskNotesModel.task_id == task_id,
                 TaskNotesModel.user_id == user_id,
             ),
@@ -100,3 +99,32 @@ class TaskAccessor(BaseAccessor):
         ).returning(TaskNotesModel)
 
         return await self.store.db.scalar(stmt1)
+
+    async def create_task_complete(
+        self,
+        task_id: int,
+        user_id: int,
+    ) -> TaskCompletesModel:
+        stmt = select(TaskCompletesModel).where(
+            TaskCompletesModel.task_id == task_id,
+            TaskCompletesModel.user_id == user_id,
+        )
+        if (res := await self.store.db.scalar(stmt)) is not None:
+            return res
+
+        stmt = (
+            insert(TaskCompletesModel)
+            .values(
+                task_id=task_id,
+                user_id=user_id,
+            )
+            .returning(TaskCompletesModel)
+        )
+        return await self.store.db.scalar(stmt)
+
+    async def delete_task_complete(self, task_id: int, user_id: int) -> None:
+        stmt = delete(TaskCompletesModel).where(
+            TaskCompletesModel.task_id == task_id,
+            TaskCompletesModel.user_id == user_id,
+        )
+        await self.store.db.execute(stmt)
