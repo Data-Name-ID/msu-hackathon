@@ -28,6 +28,7 @@ class CommentPublic(CommentBase):
 
 class TaskBase(BaseModel):
     title: str
+    description: str | None = None
     priority: TaskPriority = TaskPriority.NORMAL
     type: TaskType = TaskType.GENERAL
     date: datetime.date | None = None
@@ -37,7 +38,6 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    description: str | None = None
     start_ts: datetime.datetime | None = None
     end_ts: datetime.datetime | None = None
     for_group: bool
@@ -88,7 +88,6 @@ class Task(TaskBase):
 
 
 class TaskPublic(Task):
-    description: str | None = None
     notes: str | None = Field(default=None, alias="note")
     comments: list[CommentPublic] | None = None
 
@@ -108,7 +107,6 @@ class TaskPublic(Task):
 
 class TaskUpdate(TaskBase):
     id: int
-    description: str | None = None
     start_ts: datetime.datetime | None = None
     end_ts: datetime.datetime | None = None
 
