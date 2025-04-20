@@ -27,3 +27,7 @@ class Store:
         from app.api.users.manager import UserManager
 
         self.user_manager = UserManager(self)
+
+        from app.api.tasks.accessor import TaskAccessor
+
+        self.tasks_accessor = TaskAccessor(self)
