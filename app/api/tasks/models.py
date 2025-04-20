@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.api.tasks.enums import TaskPriority, TaskType
@@ -18,8 +18,8 @@ class TaskModel(IDMixin, BaseModel):
     group_id: Mapped[int | None] = mapped_column(ForeignKey("groups.id"), nullable=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     event_id: Mapped[int | None] = mapped_column(nullable=True)
-    start_ts: Mapped[datetime]
-    end_ts: Mapped[datetime]
+    start_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    end_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     attachments: Mapped[list["TaskAttachmentModel"]] = relationship(
         back_populates="task",
