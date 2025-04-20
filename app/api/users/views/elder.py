@@ -11,7 +11,7 @@ from app.core.utils import build_responses
 router = APIRouter(prefix="/elder", tags=["Староста"])
 
 
-@router.post(
+@router.get(
     "/my_group",
     summary="Группа старосты",
     response_description="Список студентов группы старосты",
