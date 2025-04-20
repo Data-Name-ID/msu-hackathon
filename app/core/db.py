@@ -131,7 +131,7 @@ class DatabaseAccessor(BaseAccessor):
     async def scalar(self, statement: Executable) -> Any:
         return (await self.execute(statement)).scalar()
 
-    async def scalars(self, statement: Executable) -> ScalarResult[Any]:
+    async def scalars(self, statement: Executable) -> Any:
         return (await self.execute(statement)).scalars()
 
     async def one(self, statement: Executable) -> Row[Any]:
