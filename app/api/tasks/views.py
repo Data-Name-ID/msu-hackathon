@@ -14,7 +14,9 @@ router = APIRouter(prefix="/tasks", tags=["Задачки"])
     "",
     summary="Получить задачи по времени",
     response_description="Получить задачи в заданном диапазоне времени",
-    responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
+    responses=build_responses(
+        user_errors.INVALID_TOKEN_ERROR,
+    ),
     response_model=list[Task],
 )
 async def get_tasks(

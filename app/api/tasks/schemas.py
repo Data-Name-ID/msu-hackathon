@@ -91,6 +91,14 @@ class TaskPublic(Task):
 
         return None
 
+    @field_validator("notes", mode="before")
+    @classmethod
+    def note_to_description(cls, notes: list[TaskNotesModel]) -> str | None:
+        if notes is not None:
+            return notes[0].description
+
+        return None
+
 
 class TaskUpdate(TaskBase):
     id: int
