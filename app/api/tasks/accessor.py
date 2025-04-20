@@ -1,30 +1,72 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, Select, select
+from sqlalchemy.orm import joinedload, with_loader_criteria
 
-from app.api.tasks.models import TaskModel
+from app.api.tasks.models import TaskCompletesModel, TaskModel, TaskNotesModel
+from app.api.users.models import UserModel
 from app.core.accessors import BaseAccessor
 
 
 class TaskAccessor(BaseAccessor):
+    @staticmethod
+    def _personal_filter(user: UserModel) -> ColumnElement[bool]:
+        return TaskModel.author_id == user.id
+
+    @staticmethod
+    def _group_filter(user: UserModel) -> ColumnElement[bool]:
+        return TaskModel.group_id == user.group_id
+
+    def _access_filter(self, user: UserModel) -> ColumnElement[bool]:
+        return self._personal_filter(user) | self._group_filter(user)
+
+    def _base_stmt(self, user: UserModel) -> Select:
+        return (
+            select(TaskModel)
+            .where(self._access_filter(user))
+            .options(
+                joinedload(TaskModel.completes),
+                with_loader_criteria(
+                    TaskCompletesModel,
+                    TaskCompletesModel.user_id == user.id,
+                ),
+            )
+        ).order_by(TaskModel.end_ts.asc())
+
     async def list_with_filters(
         self,
+        user: UserModel,
         start: str | None = None,
         end: str | None = None,
         event_id: int | None = None,
     ) -> list[TaskModel]:
-        stmt = select(TaskModel)
+        stmt = self._base_stmt(user)
 
         if start is not None:
             start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.start_ts <= start_date)
+            stmt = stmt.where(TaskModel.start_ts >= start_date)
         if end is not None:
             end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(UTC)
             stmt = stmt.where(TaskModel.end_ts <= end_date)
 
         if event_id is None:
-            stmt = stmt.where(TaskModel.event_id is None)
+            stmt = stmt.where(TaskModel.event_id == None)  # noqa: E711
         else:
             stmt = stmt.where(TaskModel.event_id == event_id)
 
-        return self.store.db.scalars(stmt)
+        return (await self.store.db.scalars(stmt)).unique().all()
+
+    async def get_by_id(self, user: UserModel, task_id: int) -> TaskModel | None:
+        stmt = (
+            self._base_stmt(user)
+            .where(TaskModel.id == task_id)
+            .options(
+                joinedload(TaskModel.notes),
+                joinedload(TaskModel.comments),
+                with_loader_criteria(
+                    TaskNotesModel,
+                    TaskNotesModel.user_id == user.id,
+                ),
+            )
+        )
+        return await self.store.db.scalar(stmt)
