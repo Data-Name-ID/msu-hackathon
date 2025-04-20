@@ -74,6 +74,13 @@ class TaskAccessor(BaseAccessor):
         )
         return await self.store.db.scalar(stmt)
 
+    async def delete_by_id(self, task_id: int, user_id: int) -> None:
+        stmt = delete(TaskModel).where(
+            TaskModel.id == task_id,
+            TaskModel.author_id == user_id,
+        )
+        await self.store.db.execute(stmt)
+
     async def change_note(
         self,
         task_id: int,

@@ -64,6 +64,21 @@ async def get_task(
     return task
 
 
+@router.delete(
+    "/{task_id}",
+    summary="Получить задачу по ID",
+    response_description="Получить задачу по ID",
+    responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
+)
+async def delete_task(
+    user: UserDep,
+    store: StoreDep,
+    task_id: int,
+) -> int:
+    await store.tasks_accessor.delete_by_id(task_id=task_id, user_id=user.id)
+    return HTTPStatus.NO_CONTENT
+
+
 @router.put(
     "/{task_id:int}/note",
     summary="Добавить запись к задачке",
