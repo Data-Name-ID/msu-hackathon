@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload, with_loader_criteria
 
 from app.api.tasks.enums import TaskPriority
 from app.api.tasks.models import TaskCompletesModel, TaskModel, TaskNotesModel
+from app.api.tasks.schemas import TaskCreate
 from app.api.users.models import UserModel
 from app.core.accessors import BaseAccessor
 
@@ -128,3 +129,21 @@ class TaskAccessor(BaseAccessor):
             TaskCompletesModel.user_id == user_id,
         )
         await self.store.db.execute(stmt)
+
+    async def create_task(self, task: TaskCreate, user: UserModel) -> TaskModel:
+        stmt = (
+            insert(TaskModel)
+            .values(
+                title=task.title,
+                description=task.description,
+                priority=task.priority,
+                type=task.type,
+                start_ts=task.start_ts,
+                end_ts=task.end_ts,
+                author_id=user.id,
+                event_id=task.event_id,
+                group_id=user.group_id if task.for_group else None,
+            )
+            .returning(TaskModel)
+        )
+        return await self.store.db.scalar(stmt)

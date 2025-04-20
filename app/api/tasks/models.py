@@ -12,10 +12,10 @@ class TaskModel(IDMixin, BaseModel):
     __tablename__ = "tasks"
 
     title: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column(nullable=True)
     priority: Mapped[TaskPriority]
     type: Mapped[TaskType]
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"))
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     event_id: Mapped[int]
     start_ts: Mapped[datetime]
