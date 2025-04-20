@@ -10,6 +10,7 @@ from app.core.models.mixins import IDMixin
 class GroupModel(IDMixin, BaseModel):
     __tablename__ = "groups"
 
+    number: Mapped[str] = mapped_column(String(10), nullable=False, unique=True)
     users: Mapped[list["UserModel"]] = relationship(
         back_populates="group",
         cascade="all, delete",
