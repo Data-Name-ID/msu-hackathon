@@ -6,7 +6,7 @@ from httpx import HTTPStatusError
 from app.api.users import errors
 from app.api.users.models import UserModel
 from app.api.users.schemas import FFToken, UserPublic
-from app.core.depends import StoreDep, UserDep
+from app.core.depends import StoreDep, UserDepCurrent
 from app.core.jwt.schemas import AccessToken, RefreshToken, TokenCollection
 from app.core.utils import build_responses
 
@@ -53,7 +53,7 @@ async def sign_in(
         errors.USER_NOT_EXISTS_ERROR,
     ),
 )
-async def current_user(user: UserDep) -> UserModel:
+async def current_user(user: UserDepCurrent) -> UserModel:
     return user
 
 

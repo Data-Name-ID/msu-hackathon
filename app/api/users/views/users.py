@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.users import errors
 from app.api.users.schemas import GroupNumber
-from app.core.depends import StoreDep, UserDep
+from app.core.depends import StoreDep, UserDepCurrent
 from app.core.schemas import MessageScheme
 from app.core.utils import build_responses
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["Пользователи"])
     responses=build_responses(errors.INVALID_TOKEN_ERROR),
 )
 async def set_group(
-    user: UserDep,
+    user: UserDepCurrent,
     store: StoreDep,
     group: GroupNumber,
 ) -> MessageScheme:
