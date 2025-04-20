@@ -31,13 +31,13 @@ class TaskBase(BaseModel):
     priority: TaskPriority = TaskPriority.NORMAL
     type: TaskType = TaskType.GENERAL
     date: datetime.date | None = None
+    event_id: int | None = None
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class TaskCreate(TaskBase):
     description: str | None = None
-    event_id: int | None = None
     start_ts: datetime.datetime | None = None
     end_ts: datetime.datetime | None = None
     for_group: bool
@@ -58,7 +58,7 @@ class Task(TaskBase):
     completes: bool = Field(alias="completed")
     start_ts: datetime.datetime | None
     end_ts: datetime.datetime | None
-    event_id: bool = Field(alias="for_group")
+    group_id: bool = Field(alias="for_group")
 
     @model_validator(mode="before")
     def adjust_dates(self) -> Self:
@@ -81,10 +81,10 @@ class Task(TaskBase):
     def q(cls, completes: list[TaskCompletesModel]) -> bool:
         return completes != []
 
-    @field_validator("event_id", mode="before")
+    @field_validator("group_id", mode="before")
     @classmethod
-    def qq(cls, event_id: int | None) -> bool:
-        return event_id is not None
+    def qq(cls, group_id: int | None) -> bool:
+        return group_id is not None
 
 
 class TaskPublic(Task):
@@ -99,7 +99,7 @@ class TaskPublic(Task):
         notes: list[TaskNotesModel],
         info: ValidationInfo,
     ) -> str | None:
-        if notes is not None:
+        if len(notes) != 0:
             info.data["priority"] = notes[0].priority
             return notes[0].description
 
