@@ -12,12 +12,12 @@ class TaskModel(IDMixin, BaseModel):
     __tablename__ = "tasks"
 
     title: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str | None] = mapped_column(nullable=True)
     priority: Mapped[TaskPriority]
     type: Mapped[TaskType]
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
+    group_id: Mapped[int | None] = mapped_column(ForeignKey("groups.id"), nullable=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    event_id: Mapped[int]
+    event_id: Mapped[int | None] = mapped_column(nullable=True)
     start_ts: Mapped[datetime]
     end_ts: Mapped[datetime]
 
@@ -63,7 +63,7 @@ class TaskNotesModel(BaseModel):
         primary_key=True,
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    description: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str | None] = mapped_column(nullable=True)
     priority: Mapped[TaskPriority]
 
     task: Mapped["TaskModel"] = relationship(back_populates="notes", lazy="noload")

@@ -1,15 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    ColumnElement,
-    Select,
-    and_,
-    delete,
-    exists,
-    insert,
-    select,
-    update,
-)
+from sqlalchemy import ColumnElement, Select, delete, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload, with_loader_criteria
 
 from app.api.tasks.enums import TaskPriority
@@ -47,21 +39,18 @@ class TaskAccessor(BaseAccessor):
     async def list_with_filters(
         self,
         user: UserModel,
-        start: str,
-        end: str,
+        start: str | None = None,
+        end: str | None = None,
         event_id: int | None = None,
     ) -> list[TaskModel]:
         stmt = self._base_stmt(user)
 
-        start_date = datetime.strptime(start, "%Y-%m-%d")
-        end_date = datetime.strptime(end, "%Y-%m-%d")
-
-        stmt = stmt.where(
-            and_(
-                TaskModel.start_ts >= start_date,
-                TaskModel.end_ts <= end_date,
-            ),
-        )
+        if start is not None:
+            start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(tz=None)
+            stmt = stmt.where(TaskModel.start_ts >= start_date)
+        if end is not None:
+            end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(tz=None)
+            stmt = stmt.where(TaskModel.end_ts <= end_date)
 
         if event_id is None:
             stmt = stmt.where(TaskModel.event_id == None)  # noqa: E711
@@ -92,45 +81,37 @@ class TaskAccessor(BaseAccessor):
         description: str | None,
         priority: TaskPriority,
     ) -> TaskNotesModel:
-        stmt = select(
-            exists(TaskNotesModel).where(
-                TaskNotesModel.task_id == task_id,
-                TaskNotesModel.user_id == user_id,
-            ),
+        stmt = (
+            insert(TaskNotesModel)
+            .values(
+                task_id=task_id,
+                user_id=user_id,
+                description=description,
+                priority=priority,
+            )
+            .on_conflict_do_update(
+                constraint="task_notes_pkey",
+                set_={
+                    TaskNotesModel.description: description,
+                    TaskNotesModel.priority: priority,
+                },
+            )
+            .returning(TaskNotesModel)
         )
-
-        if not await self.store.db.scalar(stmt):
-            stmt1 = insert(TaskNotesModel)
-        else:
-            stmt1 = update(TaskNotesModel)
-
-        stmt1 = stmt1.values(
-            task_id=task_id,
-            user_id=user_id,
-            description=description,
-            priority=priority,
-        ).returning(TaskNotesModel)
-
-        return await self.store.db.scalar(stmt1)
+        return await self.store.db.scalar(stmt)
 
     async def create_task_complete(
         self,
         task_id: int,
         user_id: int,
     ) -> TaskCompletesModel:
-        stmt = select(TaskCompletesModel).where(
-            TaskCompletesModel.task_id == task_id,
-            TaskCompletesModel.user_id == user_id,
-        )
-        if (res := await self.store.db.scalar(stmt)) is not None:
-            return res
-
         stmt = (
             insert(TaskCompletesModel)
             .values(
                 task_id=task_id,
                 user_id=user_id,
             )
+            .on_conflict_do_nothing()
             .returning(TaskCompletesModel)
         )
         return await self.store.db.scalar(stmt)
