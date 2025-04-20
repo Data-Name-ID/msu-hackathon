@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from fastapi import APIRouter
@@ -5,6 +6,8 @@ from fastapi import APIRouter
 from app.api.tasks import errors as task_errors
 from app.api.tasks.models import TaskModel
 from app.api.tasks.schemas import (
+    GeminiAnswer,
+    GeminiQuestion,
     Task,
     TaskComplete,
     TaskCompleteResponse,
@@ -132,3 +135,35 @@ async def set_task_status(
         )
     await store.tasks_accessor.delete_task_complete(task_id, user.id)
     return HTTPStatus.NO_CONTENT
+
+
+@router.post("/ai")
+async def ai_task(
+    store: StoreDep,
+    user: UserDep,
+    question: GeminiQuestion,
+) -> GeminiAnswer:
+    start_ts = (datetime.now()).strftime("%Y-%m-%d")
+    end_ts = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    schedule_json_string = await store.ff.get_events_data(
+        start_ts,
+        end_ts,
+        user.group_id,
+    )
+    tasks_json_string = [
+        TaskPublic.model_validate(task).model_dump()
+        for task in await store.tasks_accessor.list_with_filters(
+            start=start_ts,
+            end=end_ts,
+            user=user,
+        )
+    ]
+
+    return GeminiAnswer(
+        answer=await store.gemini.get_answer(
+            schedule_context=schedule_json_string,
+            tasks_context=tasks_json_string,
+            question=question.question,
+        ),
+    )

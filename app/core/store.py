@@ -11,6 +11,7 @@ class Store:
         from app.core.db import DatabaseAccessor
         from app.core.email import EmailManager
         from app.core.ff.accessor import FFAccessor
+        from app.core.gemini import GeminiAccessor
         from app.core.jwt import JWTManager
         from app.core.s3 import S3Accessor
 
@@ -19,6 +20,7 @@ class Store:
         self.ff = FFAccessor(self)
         self.jwt = JWTManager(self)
         self.s3 = S3Accessor(self)
+        self.gemini = GeminiAccessor(self)
 
         from app.api.users.accessor import UserAccessor
 

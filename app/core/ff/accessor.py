@@ -12,6 +12,7 @@ class FFAccessor(BaseAccessor):
             response = await client.get(
                 url="https://api.profcomff.com/auth/me",
                 headers=headers,
+                timeout=1000,
             )
             response.raise_for_status()
             return UserData.model_validate(response.json())
@@ -21,6 +22,23 @@ class FFAccessor(BaseAccessor):
         async with AsyncClient() as client:
             response = await client.get(
                 url="https://api.profcomff.com/timetable/group/?limit=1000",
+                timeout=1000,
             )
             response.raise_for_status()
             return GroupDataList.model_validate(response.json()).items
+
+    @staticmethod
+    async def get_events_data(start_ts: str, end_ts: str, group_id: int) -> dict:
+        async with AsyncClient() as client:
+            response = await client.get(
+                url="https://api.profcomff.com/timetable/event/",
+                params={
+                    "start": start_ts,
+                    "end": end_ts,
+                    "group_id": group_id,
+                    "limit": 1000,
+                },
+                timeout=1000,
+            )
+            response.raise_for_status()
+            return response.json()

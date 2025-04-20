@@ -136,3 +136,11 @@ class TaskCompleteResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class GeminiQuestion(BaseModel):
+    question: str
+
+
+class GeminiAnswer(BaseModel):
+    answer: str
