@@ -105,3 +105,8 @@ class TaskUpdate(TaskBase):
             self.end_ts = datetime.datetime.combine(self.date, datetime.time.max)
 
         return self
+
+
+class TaskNote(BaseModel):
+    priority: TaskPriority = TaskPriority.NORMAL
+    note: str | None = None

@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import ColumnElement, Select, select
+from sqlalchemy import ColumnElement, Select, exists, insert, select, update
 from sqlalchemy.orm import joinedload, with_loader_criteria
 
+from app.api.tasks.enums import TaskPriority
 from app.api.tasks.models import TaskCompletesModel, TaskModel, TaskNotesModel
 from app.api.users.models import UserModel
 from app.core.accessors import BaseAccessor
@@ -70,3 +71,32 @@ class TaskAccessor(BaseAccessor):
             )
         )
         return await self.store.db.scalar(stmt)
+
+    async def change_note(
+        self,
+        task_id: int,
+        user_id: int,
+        description: str | None,
+        priority: TaskPriority,
+    ) -> TaskNotesModel:
+        stmt = select(
+            exists(TaskNotesModel)
+            .where(
+                TaskNotesModel.task_id == task_id,
+                TaskNotesModel.user_id == user_id,
+            ),
+        )
+
+        if not await self.store.db.scalar(stmt):
+            stmt1 = insert(TaskNotesModel)
+        else:
+            stmt1 = update(TaskNotesModel)
+
+        stmt1 = stmt1.values(
+            task_id=task_id,
+            user_id=user_id,
+            description=description,
+            priority=priority,
+        ).returning(TaskNotesModel)
+
+        return await self.store.db.scalar(stmt1)
