@@ -46,10 +46,10 @@ class TaskAccessor(BaseAccessor):
         stmt = self._base_stmt(user)
 
         if start is not None:
-            start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(tz=None)
+            start_date = datetime.strptime(start, "%Y-%m-%d")
             stmt = stmt.where(TaskModel.start_ts >= start_date)
         if end is not None:
-            end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(tz=None)
+            end_date = datetime.strptime(end, "%Y-%m-%d")
             stmt = stmt.where(TaskModel.end_ts <= end_date)
 
         if event_id is None:

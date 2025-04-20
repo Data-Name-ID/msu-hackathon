@@ -11,7 +11,7 @@ class GeminiAccessor(BaseAccessor):
     ) -> dict:
         async with AsyncClient() as client:
             response = await client.post(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyB0VQ5M3LiWySNAiAD5Dxtp2qZiJEGQpNw",
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=",
                 data={"contents": [{"parts": [{"text": ""}]}]},
             )
             response.raise_for_status()
