@@ -5,3 +5,4 @@ class UserType(StrEnum):
     STUDENT = "student"
     ELDER = "elder"
     TEACHER = "teacher"
+    ADMIN = "admin"

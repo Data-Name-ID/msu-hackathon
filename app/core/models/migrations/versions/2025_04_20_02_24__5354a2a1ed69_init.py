@@ -1,10 +1,11 @@
+# init
 
 from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "7b4202214e84"
+revision: str = "5354a2a1ed69"
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -21,11 +22,11 @@ def upgrade() -> None:
         "users",
         sa.Column(
             "type",
-            sa.Enum("STUDENT", "ELDER", "TEACHER", name="usertype"),
+            sa.Enum("STUDENT", "ELDER", "TEACHER", "ADMIN", name="usertype"),
             nullable=False,
         ),
-        sa.Column("group_id", sa.Integer(), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("group_id", sa.Integer(), nullable=True),
+        sa.Column("email", sa.String(length=255), nullable=True),
         sa.Column("confirmed", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(

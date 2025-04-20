@@ -10,7 +10,7 @@ class Store:
 
         from app.core.db import DatabaseAccessor
         from app.core.email import EmailManager
-        from app.core.ff import FFAccessor
+        from app.core.ff.accessor import FFAccessor
         from app.core.jwt import JWTManager
         from app.core.s3 import S3Accessor
 

@@ -50,7 +50,6 @@ async def sign_in(
     response_model=UserPublic,
     responses=build_responses(
         errors.INVALID_TOKEN_ERROR,
-        errors.UNACTIVATED_USER_ERROR,
         errors.USER_NOT_EXISTS_ERROR,
     ),
 )
