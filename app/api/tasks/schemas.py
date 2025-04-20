@@ -1,7 +1,14 @@
 import datetime
 from typing import Self, Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from app.api.tasks.enums import TaskPriority, TaskType
 from app.api.tasks.models import TaskCompletesModel, TaskNotesModel
@@ -87,8 +94,13 @@ class TaskPublic(Task):
 
     @field_validator("notes", mode="before")
     @classmethod
-    def note_to_description(cls, notes: list[TaskNotesModel]) -> str | None:
+    def note_to_description(
+        cls,
+        notes: list[TaskNotesModel],
+        info: ValidationInfo,
+    ) -> str | None:
         if notes is not None:
+            info.data["priority"] = notes[0].priority
             return notes[0].description
 
         return None
