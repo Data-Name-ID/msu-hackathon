@@ -55,12 +55,15 @@ class TaskAttachmentModel(IDMixin, BaseModel):
     )
 
 
-class TaskNotesModel(IDMixin, BaseModel):
+class TaskNotesModel(BaseModel):
     __tablename__ = "task_notes"
 
-    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    description: Mapped[str]
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    description: Mapped[str] = mapped_column(nullable=True)
     priority: Mapped[TaskPriority]
 
     task: Mapped["TaskModel"] = relationship(back_populates="notes", lazy="noload")
