@@ -8,8 +8,9 @@ from app.api.tasks.schemas import (
     Task,
     TaskComplete,
     TaskCompleteResponse,
-    TaskNote,
     TaskCreate,
+    TaskNote,
+    TaskPublic,
 )
 from app.api.users import errors as user_errors
 from app.api.users.enums import UserType
@@ -48,7 +49,7 @@ async def get_tasks(
     summary="Получить задачу по ID",
     response_description="Получить задачу по ID",
     responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
-    response_model=Task,
+    response_model=TaskPublic,
 )
 async def get_task(
     user: UserDep,
@@ -83,6 +84,7 @@ async def change_note(
     )
 
     return TaskNote(priority=res.priority, note=res.description)
+
 
 @router.post(
     "",

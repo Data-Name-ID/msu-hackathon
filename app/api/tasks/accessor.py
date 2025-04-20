@@ -1,6 +1,15 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
-from sqlalchemy import ColumnElement, Select, delete, exists, insert, select, update
+from sqlalchemy import (
+    ColumnElement,
+    Select,
+    and_,
+    delete,
+    exists,
+    insert,
+    select,
+    update,
+)
 from sqlalchemy.orm import joinedload, with_loader_criteria
 
 from app.api.tasks.enums import TaskPriority
@@ -38,18 +47,21 @@ class TaskAccessor(BaseAccessor):
     async def list_with_filters(
         self,
         user: UserModel,
-        start: str | None = None,
-        end: str | None = None,
+        start: str,
+        end: str,
         event_id: int | None = None,
     ) -> list[TaskModel]:
         stmt = self._base_stmt(user)
 
-        if start is not None:
-            start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.start_ts >= start_date)
-        if end is not None:
-            end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.end_ts <= end_date)
+        start_date = datetime.strptime(start, "%Y-%m-%d")
+        end_date = datetime.strptime(end, "%Y-%m-%d")
+
+        stmt = stmt.where(
+            and_(
+                TaskModel.start_ts >= start_date,
+                TaskModel.end_ts <= end_date,
+            ),
+        )
 
         if event_id is None:
             stmt = stmt.where(TaskModel.event_id == None)  # noqa: E711
