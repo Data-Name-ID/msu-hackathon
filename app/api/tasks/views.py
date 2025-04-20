@@ -4,8 +4,16 @@ from fastapi import APIRouter
 
 from app.api.tasks import errors as task_errors
 from app.api.tasks.models import TaskModel
-from app.api.tasks.schemas import Task, TaskComplete, TaskCompleteResponse, TaskNote, TaskPublic
+from app.api.tasks.schemas import (
+    Task,
+    TaskComplete,
+    TaskCompleteResponse,
+    TaskCreate,
+    TaskNote,
+    TaskPublic,
+)
 from app.api.users import errors as user_errors
+from app.api.users.enums import UserType
 from app.core.depends import StoreDep, UserDep
 from app.core.utils import build_responses
 
@@ -76,6 +84,19 @@ async def change_note(
     )
 
     return TaskNote(priority=res.priority, note=res.description)
+
+
+@router.post(
+    "",
+    summary="Создание задачи",
+    response_description="Создание задачи",
+    responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
+    response_model=Task,
+)
+async def create_task(store: StoreDep, user: UserDep, task: TaskCreate) -> TaskModel:
+    if user.type != UserType.ELDER and task.for_group:
+        raise user_errors.USER_IS_NOT_ELDER_ERROR
+    return await store.tasks_accessor.create_task(task=task, user=user)
 
 
 @router.post(

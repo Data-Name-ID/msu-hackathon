@@ -1,5 +1,5 @@
 import datetime
-from typing import Self
+from typing import Self, Any
 
 from pydantic import (
     BaseModel,
@@ -43,12 +43,14 @@ class TaskCreate(TaskBase):
     for_group: bool
 
     @model_validator(mode="before")
-    def adjust_dates(self) -> Self:
-        if self.date:
-            self.start_ts = datetime.datetime.combine(self.date, datetime.time.min)
-            self.end_ts = datetime.datetime.combine(self.date, datetime.time.max)
+    @staticmethod
+    def adjust_dates(data) -> dict[str, Any]:
+        if data.get("date"):
+            date = datetime.datetime.strptime(data["date"], "%Y-%m-%d").date()
+            data["start_ts"] = datetime.datetime.combine(date, datetime.time.min)
+            data["end_ts"] = datetime.datetime.combine(date, datetime.time.max)
 
-        return self
+        return data
 
 
 class Task(TaskBase):

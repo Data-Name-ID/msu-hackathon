@@ -1,10 +1,20 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
-from sqlalchemy import ColumnElement, Select, delete, exists, insert, select, update
+from sqlalchemy import (
+    ColumnElement,
+    Select,
+    and_,
+    delete,
+    exists,
+    insert,
+    select,
+    update,
+)
 from sqlalchemy.orm import joinedload, with_loader_criteria
 
 from app.api.tasks.enums import TaskPriority
 from app.api.tasks.models import TaskCompletesModel, TaskModel, TaskNotesModel
+from app.api.tasks.schemas import TaskCreate
 from app.api.users.models import UserModel
 from app.core.accessors import BaseAccessor
 
@@ -37,18 +47,21 @@ class TaskAccessor(BaseAccessor):
     async def list_with_filters(
         self,
         user: UserModel,
-        start: str | None = None,
-        end: str | None = None,
+        start: str,
+        end: str,
         event_id: int | None = None,
     ) -> list[TaskModel]:
         stmt = self._base_stmt(user)
 
-        if start is not None:
-            start_date = datetime.strptime(start, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.start_ts >= start_date)
-        if end is not None:
-            end_date = datetime.strptime(end, "%Y-%m-%d").astimezone(UTC)
-            stmt = stmt.where(TaskModel.end_ts <= end_date)
+        start_date = datetime.strptime(start, "%Y-%m-%d")
+        end_date = datetime.strptime(end, "%Y-%m-%d")
+
+        stmt = stmt.where(
+            and_(
+                TaskModel.start_ts >= start_date,
+                TaskModel.end_ts <= end_date,
+            ),
+        )
 
         if event_id is None:
             stmt = stmt.where(TaskModel.event_id == None)  # noqa: E711
@@ -128,3 +141,21 @@ class TaskAccessor(BaseAccessor):
             TaskCompletesModel.user_id == user_id,
         )
         await self.store.db.execute(stmt)
+
+    async def create_task(self, task: TaskCreate, user: UserModel) -> TaskModel:
+        stmt = (
+            insert(TaskModel)
+            .values(
+                title=task.title,
+                description=task.description,
+                priority=task.priority,
+                type=task.type,
+                start_ts=task.start_ts,
+                end_ts=task.end_ts,
+                author_id=user.id,
+                event_id=task.event_id,
+                group_id=user.group_id if task.for_group else None,
+            )
+            .returning(TaskModel)
+        )
+        return await self.store.db.scalar(stmt)
