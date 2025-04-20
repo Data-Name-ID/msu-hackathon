@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.api.tasks import errors as task_errors
 from app.api.tasks.models import TaskModel
-from app.api.tasks.schemas import Task, TaskComplete, TaskCompleteResponse, TaskNote
+from app.api.tasks.schemas import Task, TaskComplete, TaskCompleteResponse, TaskNote, TaskPublic
 from app.api.users import errors as user_errors
 from app.core.depends import StoreDep, UserDep
 from app.core.utils import build_responses
@@ -41,7 +41,7 @@ async def get_tasks(
     summary="Получить задачу по ID",
     response_description="Получить задачу по ID",
     responses=build_responses(user_errors.INVALID_TOKEN_ERROR),
-    response_model=Task,
+    response_model=TaskPublic,
 )
 async def get_task(
     user: UserDep,
