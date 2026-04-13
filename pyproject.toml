@@ -24,7 +24,7 @@ dev = [
     "ruff>=0.9.10",
     "types-passlib>=1.7.7.20241221",
     "types-aiobotocore>=2.21.1",
-    "types-aiofiles>=24.1.0.20250326",
+    "types-aiofiles>=25.1.0.20260409",
     "aiofiles>=24.1.0",
 ]
 
